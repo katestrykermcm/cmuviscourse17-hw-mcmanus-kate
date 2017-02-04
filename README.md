@@ -1,4 +1,3 @@
-# cmuviscourse17-hw-mcmanus-kate
+# 2017-cmu-vis-course homework
 
-test?Kate McManus
-ksmcmanu@andrew.cmu.edu
+Homework assignments for the course http://cmu-vis-course.github.io
