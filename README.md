@@ -1,3 +1,4 @@
 # cmuviscourse17-hw-mcmanus-kate
 
-test?
+test?Kate McManus
+ksmcmanu@andrew.cmu.edu
