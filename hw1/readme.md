@@ -83,3 +83,6 @@ A scatterplot shows how two dimensions relate to each other. Plot the X dimensio
 25% of the grade will be given to submissions for each chart that gets full marks. The charts don’t have to look exactly like the ones shown, but the data must be clearly legible. We consider HTML validity and efficient use of the SVG elements and styles in our evaluation, i.e., even if your charts look exactly like shown here you could still lose points if you do complicated and unnecessary things.
 
 As you will see it can be a little tedious to get the SVG to represent the data, in the next homework we will no longer write this by hand but use JavaScript to generate SVG!
+
+Kate McManus
+ksmcmanu@andrew.cmu.edu
