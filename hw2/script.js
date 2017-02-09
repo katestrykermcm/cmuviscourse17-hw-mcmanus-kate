@@ -180,29 +180,5 @@ d3.csv("data/fifa-world-cup.csv", function (error, csv) {
 
 
 
- 
-
-    // bar animation
-
-
-// Part II: Selecting a Word Cup
-
-// In the updateBarChart() function, there is one location flagged with
-
-// // ******* TODO: PART II*******
-// Here, you should make your bars respond to click events. This involves highlighting the selected bar with a different color, and outputting the selected bar to the javascript console using console.log().
-
-// Grading
-
-// The rubrics on the assignment are:
-
-// 75%: Part I: Bar chart shows current selection, with appropriate scales, axes, and coloring. Switching between the different attributes works.
-// 25%: Part II: Bars can be selected and are highlighted, and selection outputs the selected bar to the javascript console.
-
-
-
-
-
-
 
 
