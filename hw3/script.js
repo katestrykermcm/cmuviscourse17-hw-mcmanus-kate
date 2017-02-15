@@ -10,11 +10,129 @@ var allWorldCupData;
 function updateBarChart(selectedDimension) {
 
     var svgBounds = d3.select("#barChart").node().getBoundingClientRect(),
-        xAxisWidth = 100,
-        yAxisHeight = 70;
+        // add padding on all sides
+        padding = 80;
+        // the height and width of the actual drawing area
+        xAxisWidth = svgBounds.width - padding * 2; //100
+        yAxisHeight = svgBounds.height - padding * 2; //70
 
-    // ******* TODO: PART I *******
-    // Copy over your HW2 code here
+        
+
+    // Scale for X axis
+    var minYear = d3.min(allWorldCupData, function(d){
+        return d.year;
+    });
+    var maxYear = d3.max(allWorldCupData, function(d){
+        return d.year;
+    });
+    // x : 1930 - 2014
+    var xScale = d3.scaleLinear()
+            // i think this is where to start the count w.r.t data
+            .domain([minYear, maxYear])
+            // i think this is x value to place at
+            .range([0, xAxisWidth]); 
+            //.nice();
+    // alternative option to explore
+    // var xScale = d3.scaleBand().range([0, xAxisWidth]).padding(.1);        
+
+
+    // Create X axis
+    var xContainer = d3.select("#xAxis");
+    // get year tick values from data 
+    var xValues = allWorldCupData.map(function (d) {
+        return d.year;
+    });
+    // add missing years
+    xValues.push(1942);
+    xValues.push(1946);
+
+
+    var xAxis = d3.axisBottom()
+        .tickValues(xValues)
+        // removes commas from the years ex. 2,000 -> 2000
+        .tickFormat(d3.format("d"));
+    // assign the scale to the axis
+    
+    xAxis.scale(xScale);
+    xContainer.append("g")
+        .attr("transform", "translate(" + (padding + ((xAxisWidth / allWorldCupData.length)/2)) + ", " + (padding + yAxisHeight) + ")")
+        .call(xAxis)
+        .selectAll("text")  
+            .style("text-anchor", "end")
+            .attr("dx", "-.8em")
+            .attr("dy", ".15em")
+            .attr("transform", "rotate(-65)");
+
+
+    // Scale for Y axis
+    var maxY = d3.max(allWorldCupData, function(d){
+        return d[selectedDimension];
+    });
+    var yScale = d3.scaleLinear()
+        .domain([0, maxY])
+        .range([yAxisHeight, 0]);
+
+
+    // Create Y axis
+    var yContainer = d3.select("#yAxis");
+    yContainer = yContainer.enter()
+        .append("g")
+        .merge(yContainer);
+    yContainer.exit().remove();
+    yContainer
+        // moving the axis to the right place
+        .transition().attr("transform", "translate(" + padding + ", " + padding + ")")
+        .call(d3.axisLeft().scale(yScale));
+
+
+
+    // Create colorScale
+    var colorScale = d3.scaleLinear().domain([0, maxY])
+        .range(["yellow", "red"]);
+
+
+    // Create the bars
+    // Select all rect's in #bars and bind the world cup data to them
+    var bars = d3.select("#bars").selectAll("rect").data(allWorldCupData);
+    // handle the enter() condition and merge with existing rects
+    bars = bars.enter()
+            .append('rect')
+            .merge(bars);
+    // handle the exit() case to remove any bars that no longer have data assigned to them
+        bars.exit().remove();
+     // finally, assign the necessary attributes to the bars   
+        bars
+            // new: we add the padding via a tranform/translate
+            .attr("transform", "translate(" + padding + "," + padding + ")")
+            // Implement how the bars respond to click events
+            .on("click", function() {
+                // Make sure only the selected bar has this new color
+                d3.select("#bars").selectAll("rect").style('fill', function (d) {
+                        return  colorScale(d[selectedDimension]);
+                    });
+                // Color the selected bar to indicate is has been selected
+                d3.select(this).style("fill", "purple");
+                // Output the selected bar to the console using console.log()
+                // call the map update and info panel update functions while passing the selected world cup event to them.
+                updateInfo(d3.select(this));
+                updateMap(d3.select(this));
+                d3.event.stopPropagation();
+            })
+            .transition().attr('x', function (d) { // starting x point for individual bars
+                return  xScale(d.year);
+            })
+            .attr('width', function (d) { // width of individual bars
+                return  (xAxisWidth / allWorldCupData.length);
+            })
+            .attr('y', function (d) {
+                return yScale(d[selectedDimension]);
+            })
+            .attr('height', function (d) {
+                return  yAxisHeight - yScale(d[selectedDimension]);
+            })
+            .attr('fill', function (d) {
+                return  colorScale(d[selectedDimension]);
+            });
 }
 
 /**
@@ -24,10 +142,12 @@ function updateBarChart(selectedDimension) {
  *  goals, matches, attendance and teams.
  */
 function chooseData() {
-
-  // ******* TODO: PART I *******
-  // Copy over your HW2 code here
-
+    // clear data about previous dimensions in the axes
+    //d3.selectAll("g").html("");
+    // Changed the selected data when a user selects a different menu item from the drop down
+    var selectMenu = document.getElementById("dataset");
+    var newDimension = selectMenu.options[selectMenu.selectedIndex].value;
+    updateBarChart(newDimension);
 }
 
 /**
@@ -36,16 +156,23 @@ function chooseData() {
  * @param oneWorldCup the currently selected world cup
  */
 function updateInfo(oneWorldCup) {
-
-    // ******* TODO: PART II *******
-
-    // Update the text elements in the infoBox to reflect:
-    // World Cup Title, host, winner, runner_up, and all participating teams that year
-
-    // Hint: For the list of teams, you can create an list element for each team.
-    // Hint: Select the appropriate ids to update the text content.
-
-
+    // Update the text elements in the infoBox on the left
+    // to reflect the following attributes of the selected year:
+    // World Cup Title
+    var edition = oneWorldCup.data()[0]["EDITION"];
+    d3.selectAll("#edition").html(edition);
+    // Host
+    var host = oneWorldCup.data()[0]["host"];
+    d3.selectAll("#host").html(host);
+    // Winner
+    var winner = oneWorldCup.data()[0]["winner"];
+    d3.selectAll("#winner").html(winner);
+    // Runner-up
+    var silver = oneWorldCup.data()[0]["runner_up"];
+    d3.selectAll("#silver").html(silver);
+    // All participating teams that year
+    var teams = oneWorldCup.data()[0]["TEAM_NAMES"];
+    d3.selectAll("#teams").html("<li>" + teams.replace(/,/g, '</li><li>') + "</li>");
 }
 
 /**
@@ -55,38 +182,38 @@ function updateInfo(oneWorldCup) {
  */
 function drawMap(world) {
 
-    //(note that projection is global!
+    // (note that projection is global!
     // updateMap() will need it to add the winner/runner_up markers.)
-
     projection = d3.geoConicConformal().scale(150).translate([400, 350]);
 
-    // ******* TODO: PART III *******
+    // Define default path generator
+    var path = d3.geoPath()
+            .projection(projection);
 
-    // Draw the background (country outlines; hint: use #map)
-    // Make sure and add gridlines to the map
-
-    // Hint: assign an id to each country path to make it easier to select afterwards
-    // we suggest you use the variable in the data element's .id field to set the id
-
-    // Make sure and give your paths the appropriate class (see the .css selectors at
-    // the top of the provided html file)
-
-
+    // Draw the background (country outlines)
+    d3.select("#map")
+        .selectAll("path")
+        .data(topojson.feature(world, world.objects.countries).features)
+        .enter()
+        .append("path")
+        // here we use the familiar d attribute again to define the path
+        .attr("d", path)
+        .attr("class", "countries")
+        // Assign an id to each country path to make it easier to select afterwards
+        .attr("id", function(d) {
+            return d.id;
+    });
+    // Make sure and add gridlines to the map TODO
 }
 
 /**
  * Clears the map
  */
 function clearMap() {
-
-    // ******* TODO: PART IV*******
-    //Clear the map of any colors/markers; You can do this with inline styling or by
-    //defining a class style in styles.css
-
-    //Hint: If you followed our suggestion of using classes to style
-    //the colors and markers for hosts/teams/winners, you can use
-    //d3 selection and .classed to set these classes on and off here.
-
+    //Clear the map of any markers
+    d3.select("#points")
+        .selectAll("circle")
+        .remove();
 }
 
 
@@ -94,28 +221,52 @@ function clearMap() {
  * Update Map with info for a specific FIFA World Cup
  * @param the data for one specific world cup
  */
-function updateMap(worldcupData) {
+function updateMap(oneWorldCup) {
 
     //Clear any previous selections;
     clearMap();
 
-    // ******* TODO: PART IV *******
+    // Runner-up
+    d3.select("#points")
+        .append("circle")
+            .attr("cx", function (d) {
+                return projection([oneWorldCup.data()[0]["RUP_LON"], oneWorldCup.data()[0]["RUP_LAT"]])[0];
+            })
+            .attr("cy", function (d) {
+                return projection([oneWorldCup.data()[0]["RUP_LON"], oneWorldCup.data()[0]["RUP_LAT"]])[1];
+            })
+            .attr("r", 12)
+            .attr("class", "silver");
 
-    // Add a marker for the winner and runner up to the map.
+    // Winner
+    d3.select("#points")
+        .append("circle")
+            .attr("cx", function (d) {
+                return projection([oneWorldCup.data()[0]["WIN_LON"], oneWorldCup.data()[0]["WIN_LAT"]])[0];
+            })
+            .attr("cy", function (d) {
+                return projection([oneWorldCup.data()[0]["WIN_LON"], oneWorldCup.data()[0]["WIN_LAT"]])[1];
+            })
+            .attr("r", 12)
+            .attr("class", "gold");
 
-    //Hint: remember we have a conveniently labeled class called .winner
-    // as well as a .silver. These have styling attributes for the two
-    //markers.
-
-
-    //Select the host country and change it's color accordingly.
-
-    //Iterate through all participating teams and change their color as well.
-
-    //We strongly suggest using classes to style the selected countries.
-
-
-
+    // Host & Team (Participants)
+    d3.select("#map")
+        .selectAll("path")
+        // Assign an id to each country path to make it easier to select afterwards
+        .attr("class", function(d) {
+            // using the host_country_code for the clicked bar in the chart, add the host class (for CSS) to the map country (path) with that id
+            if (oneWorldCup.data()[0]["host_country_code"] == d.id){
+                return "host";
+            }
+            else if (oneWorldCup.data()[0]["teams_iso"].indexOf(d.id) > -1){
+                return "team";
+            }
+            // Clear the map of any colors
+            else{
+                return "countries";
+            }
+    });
 }
 
 /* DATA LOADING */
